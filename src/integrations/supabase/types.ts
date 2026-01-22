@@ -14,13 +14,168 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          failed_attempts: number | null
+          id: string
+          last_active: string | null
+          locked_until: string | null
+          pin_hash: string
+          updated_at: string | null
+          user_id: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          failed_attempts?: number | null
+          id?: string
+          last_active?: string | null
+          locked_until?: string | null
+          pin_hash: string
+          updated_at?: string | null
+          user_id: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          failed_attempts?: number | null
+          id?: string
+          last_active?: string | null
+          locked_until?: string | null
+          pin_hash?: string
+          updated_at?: string | null
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          id: string
+          lock_timeout_minutes: number | null
+          sound_enabled: boolean | null
+          theme: string | null
+          updated_at: string | null
+          user_id: string
+          wallpaper: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lock_timeout_minutes?: number | null
+          sound_enabled?: boolean | null
+          theme?: string | null
+          updated_at?: string | null
+          user_id: string
+          wallpaper?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lock_timeout_minutes?: number | null
+          sound_enabled?: boolean | null
+          theme?: string | null
+          updated_at?: string | null
+          user_id?: string
+          wallpaper?: string | null
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          created_at: string | null
+          device_info: string | null
+          expires_at: string | null
+          id: string
+          ip_address: string | null
+          last_active: string | null
+          session_token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_info?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string | null
+          last_active?: string | null
+          session_token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_info?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string | null
+          last_active?: string | null
+          session_token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_stats: {
+        Row: {
+          commands_executed: number | null
+          created_at: string | null
+          files_created: number | null
+          id: string
+          missions_completed: number | null
+          rank: string | null
+          time_spent_minutes: number | null
+          updated_at: string | null
+          user_id: string
+          xp: number | null
+        }
+        Insert: {
+          commands_executed?: number | null
+          created_at?: string | null
+          files_created?: number | null
+          id?: string
+          missions_completed?: number | null
+          rank?: string | null
+          time_spent_minutes?: number | null
+          updated_at?: string | null
+          user_id: string
+          xp?: number | null
+        }
+        Update: {
+          commands_executed?: number | null
+          created_at?: string | null
+          files_created?: number | null
+          id?: string
+          missions_completed?: number | null
+          rank?: string | null
+          time_spent_minutes?: number | null
+          updated_at?: string | null
+          user_id?: string
+          xp?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      hash_pin: { Args: { pin: string }; Returns: string }
+      record_failed_attempt: {
+        Args: { user_id_param: string }
+        Returns: number
+      }
+      reset_failed_attempts: {
+        Args: { user_id_param: string }
+        Returns: undefined
+      }
+      verify_pin: {
+        Args: { pin_param: string; user_id_param: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
