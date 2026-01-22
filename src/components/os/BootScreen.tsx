@@ -26,14 +26,13 @@ const BOOT_LINES = [
   '[    0.434891] wizard-auth: Authentication ready',
   '',
   '[    0.500000] System initialization complete.',
-  '[    0.512847] Starting user environment...',
+  '[    0.512847] Starting desktop environment...',
 ];
 
 export const BootScreen = () => {
   const { advanceBootPhase, completeBoot, bootState } = useSystemStore();
   const [displayedLines, setDisplayedLines] = useState<string[]>([]);
   const [currentLine, setCurrentLine] = useState(0);
-  const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
     if (currentLine < BOOT_LINES.length) {
@@ -50,12 +49,12 @@ export const BootScreen = () => {
       return () => clearTimeout(timer);
     } else {
       const timer = setTimeout(() => {
-        advanceBootPhase(); // Login phase
-        setShowLogin(true);
+        advanceBootPhase(); // Desktop phase
+        completeBoot();
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [currentLine, advanceBootPhase]);
+  }, [currentLine, advanceBootPhase, completeBoot]);
 
   return (
     <div className="fixed inset-0 bg-background overflow-hidden">
@@ -71,39 +70,27 @@ export const BootScreen = () => {
 
       <div className="relative h-full flex flex-col p-6 font-mono text-sm overflow-hidden">
         {/* Boot text */}
-        <AnimatePresence>
-          {!showLogin && (
-            <motion.div 
-              className="flex-1 overflow-hidden"
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <div className="space-y-0.5">
-                {displayedLines.map((line, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.1 }}
-                    className={`text-terminal ${line.startsWith('[') ? 'text-terminal-glow' : ''}`}
-                  >
-                    {line || '\u00A0'}
-                  </motion.div>
-                ))}
-                
-                {currentLine < BOOT_LINES.length && (
-                  <span className="inline-block w-2 h-4 bg-terminal animate-pulse ml-1" />
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Login panel */}
-        <AnimatePresence>
-          {showLogin && (
-            <LoginPanel onComplete={completeBoot} />
-          )}
-        </AnimatePresence>
+        <motion.div 
+          className="flex-1 overflow-hidden"
+        >
+          <div className="space-y-0.5">
+            {displayedLines.map((line, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.1 }}
+                className={`text-terminal ${line.startsWith('[') ? 'text-terminal-glow' : ''}`}
+              >
+                {line || '\u00A0'}
+              </motion.div>
+            ))}
+            
+            {currentLine < BOOT_LINES.length && (
+              <span className="inline-block w-2 h-4 bg-terminal animate-pulse ml-1" />
+            )}
+          </div>
+        </motion.div>
 
         {/* Progress bar */}
         <div className="mt-auto pt-4">
@@ -122,105 +109,5 @@ export const BootScreen = () => {
         </div>
       </div>
     </div>
-  );
-};
-
-const LoginPanel = ({ onComplete }: { onComplete: () => void }) => {
-  const { login, user } = useSystemStore();
-  const [username, setUsername] = useState(user?.username || '');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username.trim()) return;
-    
-    setIsLoading(true);
-    
-    // Simulate login delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    login(username.trim());
-    onComplete();
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="absolute inset-0 flex items-center justify-center"
-    >
-      <div className="w-full max-w-md p-8">
-        {/* Logo */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-center mb-8"
-        >
-          <h1 className="font-display text-4xl font-bold text-terminal glow-terminal tracking-wider">
-            WIZARD
-          </h1>
-          <p className="text-foreground-muted text-sm mt-2 tracking-widest">
-            CONTROLLED ENVIRONMENT
-          </p>
-        </motion.div>
-
-        {/* Login form */}
-        <motion.form
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          onSubmit={handleLogin}
-          className="space-y-6"
-        >
-          <div className="border border-border bg-background-elevated rounded p-6">
-            <label className="block text-xs text-foreground-muted mb-2 uppercase tracking-wider">
-              Operator ID
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-background border border-border rounded px-4 py-3 text-foreground font-mono focus:outline-none focus:border-terminal focus:ring-1 focus:ring-terminal transition-colors"
-              placeholder="Enter username..."
-              autoFocus
-              disabled={isLoading}
-            />
-            
-            <p className="text-xs text-foreground-subtle mt-3">
-              {user?.username 
-                ? `Welcome back. Last session: ${new Date(user.last_active).toLocaleDateString()}`
-                : 'First time? Your progress will be saved.'}
-            </p>
-          </div>
-
-          <button
-            type="submit"
-            disabled={!username.trim() || isLoading}
-            className="w-full btn-terminal py-3 font-display uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                Authenticating...
-              </span>
-            ) : (
-              'Initialize Session'
-            )}
-          </button>
-        </motion.form>
-
-        {/* System info */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mt-8 text-center text-xs text-foreground-subtle"
-        >
-          <p>WIZARD OS v1.0.0 • Build 2026.01</p>
-          <p className="mt-1">All activities are logged and monitored</p>
-        </motion.div>
-      </div>
-    </motion.div>
   );
 };

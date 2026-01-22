@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
 import { useSystemStore } from '@/stores/systemStore';
 import { useMissionStore } from '@/stores/missionStore';
+import { useAuthStore } from '@/stores/authStore';
 
 export const StatusBar = () => {
-  const { user, systemState, notifications } = useSystemStore();
+  const { systemState, notifications } = useSystemStore();
+  const { session, lockScreen } = useAuthStore();
   const { activeMission } = useMissionStore();
   
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -83,18 +85,18 @@ export const StatusBar = () => {
       {/* Right side */}
       <div className="flex items-center gap-4">
         {/* User rank */}
-        {user && (
+        {session && (
           <div className="flex items-center gap-2">
             <span className="text-foreground-subtle">RANK:</span>
-            <span className="text-cyber uppercase">{user.rank}</span>
+            <span className="text-cyber uppercase">{session.rank}</span>
           </div>
         )}
 
         {/* XP */}
-        {user && (
+        {session && (
           <div className="flex items-center gap-2">
             <span className="text-foreground-subtle">XP:</span>
-            <span className="text-terminal">{user.xp}</span>
+            <span className="text-terminal">{session.xp}</span>
           </div>
         )}
 
@@ -117,10 +119,17 @@ export const StatusBar = () => {
           {time}
         </div>
 
-        {/* User */}
-        {user && (
+        {/* User with lock button */}
+        {session && (
           <div className="flex items-center gap-2 pl-2 border-l border-border">
-            <span className="text-foreground-muted">{user.username}</span>
+            <span className="text-foreground-muted">{session.username}</span>
+            <button
+              onClick={() => lockScreen('manual')}
+              className="text-foreground-subtle hover:text-foreground transition-colors"
+              title="Lock screen (Shift+ESC)"
+            >
+              🔒
+            </button>
           </div>
         )}
       </div>

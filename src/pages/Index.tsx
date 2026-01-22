@@ -1,11 +1,14 @@
+import { useAuthStore } from '@/stores/authStore';
 import { useSystemStore } from '@/stores/systemStore';
 import { StatusBar } from '@/components/os/StatusBar';
 import { Dock } from '@/components/os/Dock';
 import { WindowManager } from '@/components/os/WindowManager';
 import { BootScreen } from '@/components/os/BootScreen';
+import { AuthGate } from '@/components/auth/AuthGate';
+import { useEffect } from 'react';
 
 const Desktop = () => {
-  const { user } = useSystemStore();
+  const { session } = useAuthStore();
   
   return (
     <div className="h-screen w-screen overflow-hidden bg-background bg-grid relative">
@@ -27,7 +30,7 @@ const Desktop = () => {
               WIZARD
             </h1>
             <p className="text-foreground-muted text-lg">
-              Welcome, <span className="text-terminal">{user?.username}</span>
+              Welcome, <span className="text-terminal">{session?.username}</span>
             </p>
             <p className="text-foreground-subtle text-sm mt-2">
               Click an app in the dock to begin
@@ -45,14 +48,37 @@ const Desktop = () => {
   );
 };
 
-const Index = () => {
-  const { isBooted, isAuthenticated } = useSystemStore();
+const OSEnvironment = () => {
+  const { isBooted, isAuthenticated, completeBoot, login } = useSystemStore();
+  const { session } = useAuthStore();
   
-  if (!isBooted || !isAuthenticated) {
+  // Sync auth state with system store
+  useEffect(() => {
+    if (session) {
+      // Complete boot and login when auth is ready
+      if (!isBooted) {
+        completeBoot();
+      }
+      if (!isAuthenticated) {
+        login(session.username);
+      }
+    }
+  }, [session, isBooted, isAuthenticated, completeBoot, login]);
+  
+  // Show boot screen if not booted yet
+  if (!isBooted && session) {
     return <BootScreen />;
   }
   
   return <Desktop />;
+};
+
+const Index = () => {
+  return (
+    <AuthGate>
+      <OSEnvironment />
+    </AuthGate>
+  );
 };
 
 export default Index;
