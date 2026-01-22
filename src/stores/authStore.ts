@@ -2,19 +2,19 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { supabase } from '@/integrations/supabase/client';
 
-export type AuthPhase = 
-  | 'checking' 
-  | 'first_boot' 
-  | 'login' 
-  | 'locked' 
+export type AuthPhase =
+  | 'checking'
+  | 'first_boot'
+  | 'login'
+  | 'locked'
   | 'authenticated';
 
-export type SetupStep = 
+export type SetupStep =
   | 'welcome'
-  | 'username' 
-  | 'pin_create' 
-  | 'pin_confirm' 
-  | 'avatar' 
+  | 'username'
+  | 'pin_create'
+  | 'pin_confirm'
+  | 'avatar'
   | 'initializing';
 
 export interface UserSession {
@@ -34,22 +34,22 @@ interface AuthStore {
   session: UserSession | null;
   isLoading: boolean;
   error: string | null;
-  
+
   // Setup state
   setupUsername: string;
   setupPin: string;
   setupPinConfirm: string;
-  
+
   // Login state
   loginPin: string;
   failedAttempts: number;
   lockedUntil: Date | null;
-  
+
   // Lock screen state
   lockReason: 'inactivity' | 'manual' | 'startup' | null;
   lastActivity: Date;
   lockTimeoutMinutes: number;
-  
+
   // Actions
   setPhase: (phase: AuthPhase) => void;
   setSetupStep: (step: SetupStep) => void;
@@ -58,18 +58,18 @@ interface AuthStore {
   setSetupPinConfirm: (pin: string) => void;
   setLoginPin: (pin: string) => void;
   setError: (error: string | null) => void;
-  
+
   // Auth operations
   checkExistingSession: () => Promise<void>;
   createAccount: () => Promise<boolean>;
   verifyPin: (pin: string) => Promise<boolean>;
   logout: () => Promise<void>;
-  
+
   // Lock operations
   lockScreen: (reason: 'inactivity' | 'manual') => void;
   unlock: (pin: string) => Promise<boolean>;
   recordActivity: () => void;
-  
+
   // Reset
   resetSetup: () => void;
   resetLogin: () => void;
@@ -78,25 +78,10 @@ interface AuthStore {
 // PIN validation helpers
 export const validatePin = (pin: string): { valid: boolean; error?: string } => {
   // Wizard OS uses a Windows-like 6-digit numeric PIN.
-  // Keep validation minimal so users aren't blocked during setup.
+  // Keep validation minimal (exactly what Paulo wants).
   if (!/^\d{6}$/.test(pin)) {
     return { valid: false, error: 'PIN must be exactly 6 digits (numbers only)' };
   }
-
-  return { valid: true };
-};
-  
-  // Check for repeating digits
-  if (/^(.)\1+$/.test(pin)) {
-    return { valid: false, error: 'PIN cannot be all same digits' };
-  }
-  
-  // Check for simple sequences
-  const simpleSequences = ['123456', '654321', '012345', '543210'];
-  if (simpleSequences.includes(pin)) {
-    return { valid: false, error: 'PIN cannot be a simple sequence' };
-  }
-  
   return { valid: true };
 };
 
@@ -104,15 +89,15 @@ export const validateUsername = (username: string): { valid: boolean; error?: st
   if (username.length < 3) {
     return { valid: false, error: 'Username must be at least 3 characters' };
   }
-  
+
   if (username.length > 20) {
     return { valid: false, error: 'Username must be 20 characters or less' };
   }
-  
+
   if (!/^[a-z0-9]+$/.test(username)) {
     return { valid: false, error: 'Only lowercase letters and numbers allowed' };
   }
-  
+
   return { valid: true };
 };
 
@@ -124,19 +109,19 @@ export const useAuthStore = create<AuthStore>()(
       session: null,
       isLoading: false,
       error: null,
-      
+
       setupUsername: '',
       setupPin: '',
       setupPinConfirm: '',
-      
+
       loginPin: '',
       failedAttempts: 0,
       lockedUntil: null,
-      
+
       lockReason: null,
       lastActivity: new Date(),
       lockTimeoutMinutes: 5,
-      
+
       setPhase: (phase) => set({ phase }),
       setSetupStep: (setupStep) => set({ setupStep }),
       setSetupUsername: (setupUsername) => set({ setupUsername: setupUsername.toLowerCase() }),
@@ -144,14 +129,14 @@ export const useAuthStore = create<AuthStore>()(
       setSetupPinConfirm: (setupPinConfirm) => set({ setupPinConfirm }),
       setLoginPin: (loginPin) => set({ loginPin }),
       setError: (error) => set({ error }),
-      
+
       checkExistingSession: async () => {
         set({ isLoading: true, error: null });
-        
+
         try {
           // Check for existing Supabase session
           const { data: { session: supaSession } } = await supabase.auth.getSession();
-          
+
           if (supaSession?.user) {
             // Fetch profile
             const { data: profile } = await supabase
@@ -159,7 +144,7 @@ export const useAuthStore = create<AuthStore>()(
               .select('*')
               .eq('user_id', supaSession.user.id)
               .single();
-            
+
             if (profile) {
               // Fetch stats
               const { data: stats } = await supabase
@@ -167,7 +152,7 @@ export const useAuthStore = create<AuthStore>()(
                 .select('*')
                 .eq('user_id', supaSession.user.id)
                 .single();
-              
+
               set({
                 session: {
                   id: profile.id,
@@ -185,7 +170,7 @@ export const useAuthStore = create<AuthStore>()(
               return;
             }
           }
-          
+
           // Check local storage for previous user
           const storedSession = get().session;
           if (storedSession) {
@@ -198,29 +183,29 @@ export const useAuthStore = create<AuthStore>()(
           set({ phase: 'first_boot', isLoading: false });
         }
       },
-      
+
       createAccount: async () => {
         const { setupUsername, setupPin } = get();
-        
+
         const usernameValidation = validateUsername(setupUsername);
         if (!usernameValidation.valid) {
           set({ error: usernameValidation.error });
           return false;
         }
-        
+
         const pinValidation = validatePin(setupPin);
         if (!pinValidation.valid) {
           set({ error: pinValidation.error });
           return false;
         }
-        
+
         set({ isLoading: true, error: null });
-        
+
         try {
           // Create anonymous Supabase account with generated email
           const email = `${setupUsername}@wizard.local`;
           const password = `wizard_${setupPin}_${Date.now()}`;
-          
+
           const { data: authData, error: authError } = await supabase.auth.signUp({
             email,
             password,
@@ -228,7 +213,7 @@ export const useAuthStore = create<AuthStore>()(
               emailRedirectTo: window.location.origin,
             }
           });
-          
+
           if (authError) {
             // Check if username already exists by trying to match error
             if (authError.message.includes('already')) {
@@ -237,17 +222,17 @@ export const useAuthStore = create<AuthStore>()(
             }
             throw authError;
           }
-          
+
           if (!authData.user) {
             throw new Error('Failed to create account');
           }
-          
+
           // Hash PIN using database function
           const { data: hashedPin, error: hashError } = await supabase
             .rpc('hash_pin', { pin: setupPin });
-          
+
           if (hashError) throw hashError;
-          
+
           // Create profile
           const { error: profileError } = await supabase
             .from('profiles')
@@ -257,7 +242,7 @@ export const useAuthStore = create<AuthStore>()(
               pin_hash: hashedPin,
               avatar_url: null, // Default wizard avatar
             });
-          
+
           if (profileError) {
             if (profileError.message.includes('username')) {
               set({ error: 'Username already taken', isLoading: false });
@@ -265,17 +250,17 @@ export const useAuthStore = create<AuthStore>()(
             }
             throw profileError;
           }
-          
+
           // Create preferences
           await supabase.from('user_preferences').insert({
             user_id: authData.user.id,
           });
-          
+
           // Create stats
           await supabase.from('user_stats').insert({
             user_id: authData.user.id,
           });
-          
+
           // Set session
           set({
             session: {
@@ -291,7 +276,7 @@ export const useAuthStore = create<AuthStore>()(
             isLoading: false,
             lastActivity: new Date(),
           });
-          
+
           return true;
         } catch (error: unknown) {
           console.error('Account creation error:', error);
@@ -300,40 +285,40 @@ export const useAuthStore = create<AuthStore>()(
           return false;
         }
       },
-      
+
       verifyPin: async (pin: string) => {
         const { session, failedAttempts, lockedUntil } = get();
-        
+
         // Check if locked
         if (lockedUntil && new Date() < new Date(lockedUntil)) {
           const secondsLeft = Math.ceil((new Date(lockedUntil).getTime() - Date.now()) / 1000);
           set({ error: `System locked. Wait ${secondsLeft}s` });
           return false;
         }
-        
+
         if (!session) {
           set({ error: 'No session found' });
           return false;
         }
-        
+
         set({ isLoading: true, error: null });
-        
+
         try {
           // Verify PIN with database
           const { data: isValid, error } = await supabase
-            .rpc('verify_pin', { 
-              user_id_param: session.user_id, 
-              pin_param: pin 
+            .rpc('verify_pin', {
+              user_id_param: session.user_id,
+              pin_param: pin
             });
-          
+
           if (error) throw error;
-          
+
           if (isValid) {
             // Reset failed attempts
-            await supabase.rpc('reset_failed_attempts', { 
-              user_id_param: session.user_id 
+            await supabase.rpc('reset_failed_attempts', {
+              user_id_param: session.user_id
             });
-            
+
             set({
               phase: 'authenticated',
               failedAttempts: 0,
@@ -343,24 +328,24 @@ export const useAuthStore = create<AuthStore>()(
               isLoading: false,
               lastActivity: new Date(),
             });
-            
+
             return true;
           } else {
             // Record failed attempt
             const { data: attempts } = await supabase
-              .rpc('record_failed_attempt', { 
-                user_id_param: session.user_id 
+              .rpc('record_failed_attempt', {
+                user_id_param: session.user_id
               });
-            
+
             const newAttempts = attempts || failedAttempts + 1;
             let lockTime: Date | null = null;
-            
+
             if (newAttempts >= 5) {
               // Lock for increasing time
               const lockSeconds = Math.pow(2, newAttempts - 4) * 60;
               lockTime = new Date(Date.now() + lockSeconds * 1000);
             }
-            
+
             set({
               failedAttempts: newAttempts,
               lockedUntil: lockTime,
@@ -368,7 +353,7 @@ export const useAuthStore = create<AuthStore>()(
               error: 'Incorrect PIN',
               isLoading: false,
             });
-            
+
             return false;
           }
         } catch (error) {
@@ -377,7 +362,7 @@ export const useAuthStore = create<AuthStore>()(
           return false;
         }
       },
-      
+
       logout: async () => {
         await supabase.auth.signOut();
         set({
@@ -393,27 +378,27 @@ export const useAuthStore = create<AuthStore>()(
           error: null,
         });
       },
-      
+
       lockScreen: (reason) => {
         const { phase } = get();
         if (phase === 'authenticated') {
-          set({ 
-            phase: 'locked', 
+          set({
+            phase: 'locked',
             lockReason: reason,
             loginPin: '',
             error: null,
           });
         }
       },
-      
+
       unlock: async (pin: string) => {
         return get().verifyPin(pin);
       },
-      
+
       recordActivity: () => {
         set({ lastActivity: new Date() });
       },
-      
+
       resetSetup: () => {
         set({
           setupStep: 'welcome',
@@ -423,7 +408,7 @@ export const useAuthStore = create<AuthStore>()(
           error: null,
         });
       },
-      
+
       resetLogin: () => {
         set({
           loginPin: '',
@@ -444,18 +429,18 @@ export const useAuthStore = create<AuthStore>()(
 // Activity tracker hook
 export const useActivityTracker = () => {
   const { recordActivity, phase, lockScreen, lastActivity, lockTimeoutMinutes } = useAuthStore();
-  
+
   // Check for inactivity
   const checkInactivity = () => {
     if (phase !== 'authenticated') return;
-    
+
     const now = new Date();
     const timeSinceActivity = (now.getTime() - new Date(lastActivity).getTime()) / 1000 / 60;
-    
+
     if (timeSinceActivity >= lockTimeoutMinutes) {
       lockScreen('inactivity');
     }
   };
-  
+
   return { recordActivity, checkInactivity };
 };
