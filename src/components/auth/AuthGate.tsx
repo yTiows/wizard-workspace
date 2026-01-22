@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, forwardRef } from 'react';
 import { useAuthStore, useActivityTracker } from '@/stores/authStore';
 import { SetupWizard } from './SetupWizard';
 import { LockScreen } from './LockScreen';
@@ -82,6 +82,7 @@ export const AuthGate = ({ children }: AuthGateProps) => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
+        className="h-full"
       >
         {children}
       </motion.div>

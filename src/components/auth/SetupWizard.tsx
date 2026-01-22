@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore, validateUsername, validatePin, SetupStep } from '@/stores/authStore';
 import { PinInput } from './PinInput';
@@ -180,88 +180,87 @@ export const SetupWizard = () => {
   );
 };
 
-// Welcome Step
-const WelcomeStep = ({ onContinue }: { onContinue: () => void }) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.95 }}
-    animate={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.95 }}
-    className="text-center max-w-lg px-8"
-  >
-    {/* Wizard Logo */}
+// Welcome Step - wrapped with forwardRef for AnimatePresence
+const WelcomeStep = forwardRef<HTMLDivElement, { onContinue: () => void }>(
+  ({ onContinue }, ref) => (
     <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="mb-12"
+      ref={ref}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="text-center max-w-lg px-8"
     >
+      {/* Wizard Logo */}
       <motion.div
-        className="w-32 h-32 mx-auto mb-6 rounded-2xl bg-[hsl(var(--terminal-dim))] border-2 border-terminal flex items-center justify-center"
-        animate={{
-          boxShadow: [
-            '0 0 20px hsl(160 100% 45% / 0.3)',
-            '0 0 40px hsl(160 100% 45% / 0.5)',
-            '0 0 20px hsl(160 100% 45% / 0.3)',
-          ],
-        }}
-        transition={{ duration: 2, repeat: Infinity }}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="mb-12"
       >
-        <span className="font-display text-5xl font-bold text-terminal glow-terminal">W</span>
+        <motion.div
+          className="w-32 h-32 mx-auto mb-6 rounded-2xl bg-[hsl(var(--terminal-dim))] border-2 border-terminal flex items-center justify-center"
+          animate={{
+            boxShadow: [
+              '0 0 20px hsl(160 100% 45% / 0.3)',
+              '0 0 40px hsl(160 100% 45% / 0.5)',
+              '0 0 20px hsl(160 100% 45% / 0.3)',
+            ],
+          }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <span className="font-display text-5xl font-bold text-terminal glow-terminal">W</span>
+        </motion.div>
+        
+        <h1 className="font-display text-4xl font-bold text-terminal glow-terminal tracking-wider">
+          WIZARD
+        </h1>
+        <p className="text-foreground-muted mt-2 tracking-widest text-sm">
+          CONTROLLED ENVIRONMENT
+        </p>
       </motion.div>
       
-      <h1 className="font-display text-4xl font-bold text-terminal glow-terminal tracking-wider">
-        WIZARD
-      </h1>
-      <p className="text-foreground-muted mt-2 tracking-widest text-sm">
-        CONTROLLED ENVIRONMENT
-      </p>
-    </motion.div>
-    
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.6 }}
-    >
-      <p className="text-foreground-muted mb-8 text-lg">
-        Welcome to your secure workspace.
-        <br />
-        Let's set up your operator credentials.
-      </p>
-      
-      <button
-        onClick={onContinue}
-        className="btn-terminal py-4 px-12 font-display text-lg uppercase tracking-wider"
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6 }}
       >
-        Begin Setup
-      </button>
+        <p className="text-foreground-muted mb-8 text-lg">
+          Welcome to your secure workspace.
+          <br />
+          Let's set up your operator credentials.
+        </p>
+        
+        <button
+          onClick={onContinue}
+          className="btn-terminal py-4 px-12 font-display text-lg uppercase tracking-wider"
+        >
+          Begin Setup
+        </button>
+      </motion.div>
+      
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8 }}
+        className="text-foreground-subtle text-xs mt-12"
+      >
+        WIZARD OS v1.0.0 • Build 2026.01
+      </motion.p>
     </motion.div>
-    
-    <motion.p
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.8 }}
-      className="text-foreground-subtle text-xs mt-12"
-    >
-      WIZARD OS v1.0.0 • Build 2026.01
-    </motion.p>
-  </motion.div>
+  )
 );
+WelcomeStep.displayName = 'WelcomeStep';
 
 // Username Step
-const UsernameStep = ({
-  username,
-  onUsernameChange,
-  onSubmit,
-  error,
-  isLoading,
-}: {
+const UsernameStep = forwardRef<HTMLDivElement, {
   username: string;
   onUsernameChange: (v: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   error: string | null;
   isLoading: boolean;
-}) => (
+}>(({ username, onUsernameChange, onSubmit, error, isLoading }, ref) => (
   <motion.div
+    ref={ref}
     initial={{ opacity: 0, x: 50 }}
     animate={{ opacity: 1, x: 0 }}
     exit={{ opacity: 0, x: -50 }}
@@ -325,21 +324,18 @@ const UsernameStep = ({
       </button>
     </form>
   </motion.div>
-);
+));
+UsernameStep.displayName = 'UsernameStep';
 
 // PIN Create Step
-const PinCreateStep = ({
-  pin,
-  onPinChange,
-  error,
-  onBack,
-}: {
+const PinCreateStep = forwardRef<HTMLDivElement, {
   pin: string;
   onPinChange: (pin: string) => void;
   error: string | null;
   onBack: () => void;
-}) => (
+}>(({ pin, onPinChange, error, onBack }, ref) => (
   <motion.div
+    ref={ref}
     initial={{ opacity: 0, x: 50 }}
     animate={{ opacity: 1, x: 0 }}
     exit={{ opacity: 0, x: -50 }}
@@ -387,21 +383,18 @@ const PinCreateStep = ({
       ← Back
     </button>
   </motion.div>
-);
+));
+PinCreateStep.displayName = 'PinCreateStep';
 
 // PIN Confirm Step
-const PinConfirmStep = ({
-  pin,
-  onPinChange,
-  error,
-  onBack,
-}: {
+const PinConfirmStep = forwardRef<HTMLDivElement, {
   pin: string;
   onPinChange: (pin: string) => void;
   error: string | null;
   onBack: () => void;
-}) => (
+}>(({ pin, onPinChange, error, onBack }, ref) => (
   <motion.div
+    ref={ref}
     initial={{ opacity: 0, x: 50 }}
     animate={{ opacity: 1, x: 0 }}
     exit={{ opacity: 0, x: -50 }}
@@ -445,17 +438,16 @@ const PinConfirmStep = ({
       ← Start over
     </button>
   </motion.div>
-);
+));
+PinConfirmStep.displayName = 'PinConfirmStep';
 
 // Avatar Step
-const AvatarStep = ({
-  username,
-  onContinue,
-}: {
+const AvatarStep = forwardRef<HTMLDivElement, {
   username: string;
   onContinue: () => void;
-}) => (
+}>(({ username, onContinue }, ref) => (
   <motion.div
+    ref={ref}
     initial={{ opacity: 0, x: 50 }}
     animate={{ opacity: 1, x: 0 }}
     exit={{ opacity: 0, x: -50 }}
@@ -497,17 +489,16 @@ const AvatarStep = ({
       </button>
     </motion.div>
   </motion.div>
-);
+));
+AvatarStep.displayName = 'AvatarStep';
 
 // Initializing Step
-const InitializingStep = ({
-  messages,
-  progress,
-}: {
+const InitializingStep = forwardRef<HTMLDivElement, {
   messages: string[];
   progress: number;
-}) => (
+}>(({ messages, progress }, ref) => (
   <motion.div
+    ref={ref}
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
@@ -557,4 +548,5 @@ const InitializingStep = ({
       </div>
     </div>
   </motion.div>
-);
+));
+InitializingStep.displayName = 'InitializingStep';

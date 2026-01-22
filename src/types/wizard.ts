@@ -2,6 +2,22 @@
 // WIZARD OS - Core Type Definitions
 // ============================================
 
+// Auth/Setup Types
+export type AuthPhase = 
+  | 'checking' 
+  | 'first_boot' 
+  | 'login' 
+  | 'locked' 
+  | 'authenticated';
+
+export type SetupStep = 
+  | 'welcome'
+  | 'username' 
+  | 'pin_create' 
+  | 'pin_confirm' 
+  | 'avatar' 
+  | 'initializing';
+
 // Filesystem Types
 export interface FileNode {
   id: string;
