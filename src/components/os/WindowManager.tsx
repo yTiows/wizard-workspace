@@ -2,12 +2,15 @@ import { AnimatePresence } from 'framer-motion';
 import { useWindowStore } from '@/stores/windowStore';
 import { WindowFrame } from './WindowFrame';
 import { TerminalApp } from '@/components/apps/TerminalApp';
+import { BrowserApp } from '@/components/apps/BrowserApp';
 import { AppId } from '@/types/wizard';
 
 const AppRenderer = ({ appId }: { appId: AppId }) => {
   switch (appId) {
     case 'terminal':
       return <TerminalApp />;
+    case 'browser':
+      return <BrowserApp />;
     default:
       return (
         <div className="h-full flex items-center justify-center text-foreground-muted">
