@@ -77,9 +77,14 @@ interface AuthStore {
 
 // PIN validation helpers
 export const validatePin = (pin: string): { valid: boolean; error?: string } => {
+  // Wizard OS uses a Windows-like 6-digit numeric PIN.
+  // Keep validation minimal so users aren't blocked during setup.
   if (!/^\d{6}$/.test(pin)) {
-    return { valid: false, error: 'PIN must be exactly 6 digits' };
+    return { valid: false, error: 'PIN must be exactly 6 digits (numbers only)' };
   }
+
+  return { valid: true };
+};
   
   // Check for repeating digits
   if (/^(.)\1+$/.test(pin)) {
